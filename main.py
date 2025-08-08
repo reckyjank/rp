@@ -13,10 +13,12 @@ def handler(event):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dtype = torch.bfloat16 if device == "cuda" else torch.float32
 
+    # Always load from a baked local model directory to avoid any cold-start downloads
+    local_model_dir = os.environ.get("FLUX_MODEL_DIR", "/models/FLUX.1-dev")
     pipe = FluxPipeline.from_pretrained(
-        "black-forest-labs/FLUX.1-dev",
+        local_model_dir,
         torch_dtype=dtype,
-        token=os.environ.get("HF_TOKEN"),
+        local_files_only=True,
     )
 
     input_payload = event.get("input", {})
