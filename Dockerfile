@@ -22,17 +22,13 @@ ARG HF_TOKEN
 ENV HF_HOME=/root/.cache/huggingface
 # Expose HF_TOKEN to this build step only, then clear it
 ENV HF_TOKEN=${HF_TOKEN}
+
+# Create a script to download and save the model
+RUN echo 'import os\nfrom diffusers import FluxPipeline\npipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-dev", token=os.environ.get("HF_TOKEN"))\npipe.save_pretrained("/models/FLUX.1-dev")\nprint("Saved FLUX.1-dev to /models/FLUX.1-dev")' > /tmp/download_model.py
+
 RUN mkdir -p /models/FLUX.1-dev && \
-    python - << 'PY'
-import os
-from diffusers import FluxPipeline
-pipe = FluxPipeline.from_pretrained(
-    "black-forest-labs/FLUX.1-dev",
-    token=os.environ.get("HF_TOKEN"),
-)
-pipe.save_pretrained("/models/FLUX.1-dev")
-print("Saved FLUX.1-dev to /models/FLUX.1-dev")
-PY
+    python3 /tmp/download_model.py
+
 ENV HF_TOKEN=
 
 COPY . .
