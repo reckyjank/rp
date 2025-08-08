@@ -1,0 +1,3 @@
+runpod
+transformers==4.30.0  # Or the latest version of transformers
+torch==2.1.0  # If your model uses PyTorch
