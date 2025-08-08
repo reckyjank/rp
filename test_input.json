@@ -1,0 +1,11 @@
+{
+    "input": {
+        "prompt": "test prompt",
+        "height": 1344,
+        "width": 750,
+        "steps": 20,
+        "guidance": 7.5,
+        "negativePrompt": "awdaw",
+        "seed": 42
+    }
+}
