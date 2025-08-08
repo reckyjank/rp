@@ -2,7 +2,7 @@ FROM nvidia/cuda:12.6.2-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Python, Node.js and system dependencies
+# Install Python and system dependencies
 RUN apt-get update && apt-get install -y \
     python3 python3-pip python3-dev \
     git ffmpeg build-essential cmake libssl-dev \
@@ -25,6 +25,11 @@ RUN pip3 install --upgrade pip && \
 # Copy application code
 COPY . .
 
+# Set the environment variable for Runpod
 ENV RUNPOD_HANDLER=main
+
+# Set the Hugging Face Token as an environment variable in Docker
+# You will replace `your_hugging_face_token` with the actual token during deployment (could be passed in the Runpod config).
+ENV HF_TOKEN=your_hugging_face_token
 
 CMD [ "python3", "-u", "main.py" ]
