@@ -17,6 +17,25 @@ RUN pip install --upgrade pip && \
       torch==2.4.0 torchvision==0.19.0 && \
     pip install -r requirements.txt
 
+# Bake the FLUX model into the image to avoid downloads at cold start
+ARG HF_TOKEN
+ENV HF_HOME=/root/.cache/huggingface
+# Expose HF_TOKEN to this build step only, then clear it
+ENV HF_TOKEN=${HF_TOKEN}
+RUN mkdir -p /models/FLUX.1-dev && \
+    python - << 'PY'
+import os
+from diffusers import FluxPipeline
+pipe = FluxPipeline.from_pretrained(
+    "black-forest-labs/FLUX.1-dev",
+    token=os.environ.get("HF_TOKEN"),
+)
+pipe.save_pretrained("/models/FLUX.1-dev")
+print("Saved FLUX.1-dev to /models/FLUX.1-dev")
+PY
+ENV HF_TOKEN=
+
 COPY . .
 ENV RUNPOD_HANDLER=main
+ENV FLUX_MODEL_DIR=/models/FLUX.1-dev
 CMD ["python", "-u", "main.py"]
