@@ -1,9 +1,0 @@
-runpod
-torch==2.4.0
-diffusers==0.31.0
-transformers==4.43.3
-accelerate>=0.33.0
-safetensors>=0.4.3
-Pillow>=9.1.1
-sentencepiece>=0.1.99
-protobuf>=3.20.0,<6.0.0
