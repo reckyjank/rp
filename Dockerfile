@@ -1,37 +1,14 @@
-FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
+FROM runpod/worker-comfyui:5.3.0-base
 
-ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ffmpeg git-lfs && \
+    git lfs install && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 python3-pip git ffmpeg \
-  && rm -rf /var/lib/apt/lists/* \
-  && ln -s /usr/bin/python3 /usr/bin/python
+RUN comfy-node-install https://github.com/cubiq/ComfyUI_essentials@9d9f4bedfc9f0321c19faf71855e228c93bd0dc9 && \
+    comfy-node-install https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite@8e4d79471bf1952154768e8435a9300077b534fa
 
-WORKDIR /app
-
-COPY requirements.txt .
-
-# Install CUDA build of torch first, then the rest
-RUN pip install --upgrade pip && \
-    pip install --extra-index-url https://download.pytorch.org/whl/cu121 \
-      torch==2.4.0 torchvision==0.19.0 && \
-    pip install -r requirements.txt
-
-# Bake the FLUX model into the image to avoid downloads at cold start
-ARG HF_TOKEN
-ENV HF_HOME=/root/.cache/huggingface
-# Expose HF_TOKEN to this build step only, then clear it
-ENV HF_TOKEN=${HF_TOKEN}
-
-# Create a script to download and save the model
-RUN echo 'import os\nfrom diffusers import FluxPipeline\npipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-dev", token=os.environ.get("HF_TOKEN"))\npipe.save_pretrained("/models/FLUX.1-dev")\nprint("Saved FLUX.1-dev to /models/FLUX.1-dev")' > /tmp/download_model.py
-
-RUN mkdir -p /models/FLUX.1-dev && \
-    python3 /tmp/download_model.py
-
-ENV HF_TOKEN=
-
-COPY . .
-ENV RUNPOD_HANDLER=main
-ENV FLUX_MODEL_DIR=/models/FLUX.1-dev
-CMD ["python", "-u", "main.py"]
+# Map ComfyUI models directory to Runpod network volume to avoid copying large model files
+RUN mkdir -p /runpod-volume/models /workspace/ComfyUI && \
+    rm -rf /workspace/ComfyUI/models && \
+    ln -s /runpod-volume/models /workspace/ComfyUI/models
